@@ -42,7 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-static uint32_t delay = 1500;
+static uint32_t delay = 250;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -97,6 +97,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  /* USER CODE BEGIN 2 */
+
+  /* USER CODE END 2 */
+
   /* Initialize leds */
   BSP_LED_Init(LED_BLUE);
   BSP_LED_Init(LED_GREEN);
@@ -107,8 +111,8 @@ int main(void)
   BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_EXTI);
   BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_EXTI);
 
-  /* USER CODE BEGIN 2 */
-  printf("Starting Bootloader(%d.%d)\n", BL_Version[0], BL_Version[1] );
+  /* USER CODE BEGIN BSP */
+  printf("Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1] );
   // Jump to application
   BSP_LED_Off(LED_RED);
   HAL_Delay(1500);
@@ -128,12 +132,9 @@ int main(void)
   HAL_Delay(1500);
     goto_application();
   } else {
-    printf("No valid application found, staying in bootloader\n");
+    printf("No valid application found, staying in bootloader\r\n");
     // Stay in bootloader mode
   }
-  /* USER CODE END 2 */
-  /* USER CODE BEGIN BSP */
-
   /* USER CODE END BSP */
 
   /* Infinite loop */

@@ -43,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-static uint32_t delay = 1500;
+static uint32_t delay = 250;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -117,7 +117,7 @@ int main(void)
   BSP_LED_On(LED_BLUE);
   BSP_LED_On(LED_GREEN);
   BSP_LED_On(LED_RED);
-  printf("Starting Application(%d.%d)\n", APP_Version[0], APP_Version[1] );
+  printf("Starting Application(%d.%d)\r\n", APP_Version[0], APP_Version[1] );
 
   /* USER CODE END BSP */
 
@@ -127,7 +127,7 @@ int main(void)
   {
 
     /* -- Sample board code for User push-button in interrupt mode ---- */
-	printf("Salaam\n");
+	printf("Salaam from the App.\r\n");
     BSP_LED_On(LED_BLUE);
     HAL_Delay(delay);
     BSP_LED_Off(LED_BLUE);

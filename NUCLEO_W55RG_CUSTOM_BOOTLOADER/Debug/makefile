@@ -67,8 +67,8 @@ all: main-build
 main-build: NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf secondary-outputs
 
 # Tool invocations
-NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf NUCLEO_W55RG_CUSTOM_BOOTLOADER.map: $(OBJS) $(USER_OBJS) /home/elhaloua/STM32CubeIDE/workspace_1.19.0/NUCLEO_W55RG_CUSTOM_BOOTLOADER/STM32WB55RGVX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/elhaloua/STM32CubeIDE/workspace_1.19.0/NUCLEO_W55RG_CUSTOM_BOOTLOADER/STM32WB55RGVX_FLASH.ld" --specs=nosys.specs -Wl,-Map="NUCLEO_W55RG_CUSTOM_BOOTLOADER.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf NUCLEO_W55RG_CUSTOM_BOOTLOADER.map: $(OBJS) $(USER_OBJS) /home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/NUCLEO_W55RG_CUSTOM_BOOTLOADER/STM32WB55RGVX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/NUCLEO_W55RG_CUSTOM_BOOTLOADER/STM32WB55RGVX_FLASH.ld" --specs=nosys.specs -Wl,-Map="NUCLEO_W55RG_CUSTOM_BOOTLOADER.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

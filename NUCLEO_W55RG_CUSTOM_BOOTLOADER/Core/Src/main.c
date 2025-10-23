@@ -21,18 +21,21 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define MAX_BLOCK_SIZE (4096) // 4KB
+#define ETX_APP_START_ADDRESS 0x08010000
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAJOR 0 // BL Major version Number
-#define MINOR 1 // BL Minor version Number
+#define MAJOR 2 // BL Major version Number
+#define MINOR 0 // BL Minor version Number
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,11 +46,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 static uint32_t delay = 250;
-UART_HandleTypeDef hlpuart1;
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef hlpuart1; // for debuging
+UART_HandleTypeDef
+    huart1; // for data transfer, will be connected to the host pc
 
 /* USER CODE BEGIN PV */
 const uint8_t BL_Version[2] = {MAJOR, MINOR};
+static uint32_t application_write_idx = 0; // Add this
+static uint32_t application_size = 0;      // Add this
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,9 +65,14 @@ static void MX_LPUART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 static uint8_t is_application_valid(uint32_t app_addr);
 static void goto_application(void);
+static void Firmware_Update(void);
+static int UART_Write_Loop(void);
+static HAL_StatusTypeDef
+write_data_to_flash_app(uint8_t *data, uint16_t data_len, bool is_first_block);
 /* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
+/* Private user code
+ * ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -76,9 +87,11 @@ int main(void) {
 
   /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+  /* MCU
+   * Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick.
+  /* Reset of all peripherals, Initializes the Flash interface and the
+   * Systick.
    */
   HAL_Init();
 
@@ -101,6 +114,7 @@ int main(void) {
   MX_USART1_UART_Init();
   MX_LPUART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  printf("Custom Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
 
   /* USER CODE END 2 */
 
@@ -109,23 +123,24 @@ int main(void) {
   BSP_LED_Init(LED_GREEN);
   BSP_LED_Init(LED_RED);
 
-  /* Initialize USER push-button, will be used to trigger an interrupt each time
-   * it's pressed.*/
+  /* Initialize USER push-button, will be used to trigger an interrupt each
+   * time it's pressed.*/
   BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
   BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_EXTI);
   BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_EXTI);
 
   /* USER CODE BEGIN BSP */
-  printf("Custom Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
-  // Jump to application
-  for (uint8_t i = 0; i < 10; i++) {
-    printf("%d\r\n", 9 - i);
+  for (uint8_t i = 0; i < 5; i++) {
+    printf("%d\r\n", 4 - i);
     BSP_LED_Off(LED_RED);
     HAL_Delay(1500);
     BSP_LED_On(LED_RED);
     HAL_Delay(1500);
     BSP_LED_Off(LED_RED);
   }
+  // check for firmware update:
+  Firmware_Update();
+  // Jump to application
   if (is_application_valid(0x08010000)) {
     BSP_LED_On(LED_GREEN);
     HAL_Delay(1500);
@@ -141,14 +156,6 @@ int main(void) {
   while (1) {
 
     /* -- Sample board code for User push-button in interrupt mode ---- */
-    //    BSP_LED_Toggle(LED_BLUE);
-    //    HAL_Delay(delay);
-    //
-    //    BSP_LED_Toggle(LED_GREEN);
-    //    HAL_Delay(delay);
-    //
-    //    BSP_LED_Toggle(LED_RED);
-    //    HAL_Delay(delay);
 
     /* USER CODE END WHILE */
 
@@ -349,12 +356,13 @@ int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 {
   /* Place your implementation of fputc here */
-  /* e.g. write a character to the UART1 and Loop until the end of transmission
+  /* e.g. write a character to the UART1 and Loop until the end of
+   * transmission
    */
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&hlpuart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
   return ch;
 }
-// hlpuart1
+
 static int UART_Write_Loop(void) {
   char tx = 'g';
   char rx = '0';
@@ -398,34 +406,59 @@ write_data_to_flash_app(uint8_t *data, uint16_t data_len, bool is_first_block) {
     if (ret != HAL_OK) {
       break;
     }
-    // No need to erase every time. Erase only the first time.
+
     if (is_first_block) {
       printf("Erasing the Flash memory...\r\n");
-      // Erase the Flash
       FLASH_EraseInitTypeDef EraseInitStruct;
-      uint32_t SectorError;
+      uint32_t PageError;
+
       EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-      EraseInitStruct.PageAddress = ETX_APP_START_ADDRESS;
-      EraseInitStruct.NbPages = 47; // 47 Pages
-      ret = HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError);
+      // Calculate page number from address
+      EraseInitStruct.Page =
+          (ETX_APP_START_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
+      EraseInitStruct.NbPages = 33;
+
+      ret = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
       if (ret != HAL_OK) {
+        printf("Flash Erase Error: PageError = %lu\r\n", PageError);
         break;
       }
       application_write_idx = 0;
     }
-    for (int i = 0; i < data_len / 2; i++) {
-      uint16_t halfword_data = data[i * 2] | (data[i * 2 + 1] << 8);
-      ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,
+
+    // STM32WB uses 64-bit (doubleword) programming
+    for (int i = 0; i < data_len / 8; i++) {
+      uint64_t doubleword_data = 0;
+      for (int j = 0; j < 8; j++) {
+        doubleword_data |= ((uint64_t)data[i * 8 + j] << (j * 8));
+      }
+
+      ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
                               (ETX_APP_START_ADDRESS + application_write_idx),
-                              halfword_data);
+                              doubleword_data);
       if (ret == HAL_OK) {
-        // update the data count
-        application_write_idx += 2;
+        application_write_idx += 8;
       } else {
         printf("Flash Write Error...HALT!!!\r\n");
         break;
       }
     }
+
+    // Handle remaining bytes (if data_len is not multiple of 8)
+    int remaining = data_len % 8;
+    if (remaining > 0 && ret == HAL_OK) {
+      uint64_t doubleword_data = 0;
+      for (int j = 0; j < remaining; j++) {
+        doubleword_data |= ((uint64_t)data[(data_len / 8) * 8 + j] << (j * 8));
+      }
+      ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+                              (ETX_APP_START_ADDRESS + application_write_idx),
+                              doubleword_data);
+      if (ret == HAL_OK) {
+        application_write_idx += 8;
+      }
+    }
+
     if (ret != HAL_OK) {
       break;
     }
@@ -435,6 +468,81 @@ write_data_to_flash_app(uint8_t *data, uint16_t data_len, bool is_first_block) {
     }
   } while (false);
   return ret;
+}
+/**
+ * @brief Check for Firmware Update and update the Firmware
+ * @retval None
+ */
+static void Firmware_Update(void) {
+  uint8_t xx, yy;
+  uint8_t x = 'x';
+  uint8_t y = 'y';
+  HAL_StatusTypeDef ex = HAL_OK;
+  uint16_t current_app_size = 0;
+  uint16_t i = 0;
+  uint8_t block[MAX_BLOCK_SIZE] = {0};
+  do {
+    if (UART_Write_Loop() != 0) {
+      // Sender is ready. Receive the Firmware Size
+      //  Ask yy
+      HAL_UART_Transmit(&huart1, &y, 1, HAL_MAX_DELAY);
+      ex = HAL_UART_Receive(&huart1, &yy, 1, 5000);
+      if (ex != HAL_OK) {
+        printf("Get application Size error (yy)...HALT!!!\r\n");
+        break;
+      }
+      // Ask xx
+      HAL_UART_Transmit(&huart1, &x, 1, HAL_MAX_DELAY);
+      ex = HAL_UART_Receive(&huart1, &xx, 1, 5000);
+      if (ex != HAL_OK) {
+        printf("Get application Size error(XX)...HALT!!!\r\n");
+        break;
+      }
+      application_size = yy | (xx << 8);
+      printf("Application Size = %d bytes\r\n", application_size);
+      while (1) {
+        if ((i == MAX_BLOCK_SIZE) || (current_app_size >= application_size)) {
+          printf("Received Block[%d]\r\n", current_app_size / MAX_BLOCK_SIZE);
+          // write to flash
+          ex = write_data_to_flash_app(block, MAX_BLOCK_SIZE,
+                                       (current_app_size <= MAX_BLOCK_SIZE));
+          if (ex != HAL_OK) {
+            break;
+          }
+          // clear the memory
+          memset(block, 0, MAX_BLOCK_SIZE);
+          i = 0;
+        }
+        if (current_app_size >= application_size) {
+          // received all data. exit
+          ex = HAL_OK;
+          break;
+        }
+        // Ask yy
+        HAL_UART_Transmit(&huart1, &y, 1, HAL_MAX_DELAY);
+        ex = HAL_UART_Receive(&huart1, &yy, 1, 5000);
+        if (ex != HAL_OK) {
+          printf("Get application data[index:%d] error (yy)...HALT!!!\r\n", i);
+          break;
+        }
+        // Ask xx
+        HAL_UART_Transmit(&huart1, &x, 1, HAL_MAX_DELAY);
+        ex = HAL_UART_Receive(&huart1, &xx, 1, 5000);
+        if (ex != HAL_OK) {
+          printf("Get application data[index:%d] error(XX)...HALT!!!\r\n", i);
+          break;
+        }
+        //--- Save xxyy in block[i]
+        block[i++] = yy;
+        block[i++] = xx;
+        current_app_size += 2;
+      }
+    }
+  } while (false);
+  if (ex != HAL_OK) {
+    while (1)
+      ;
+  }
 }
 
 // check if application valide
@@ -451,6 +559,7 @@ static uint8_t is_application_valid(uint32_t app_addr) {
   if (((reset_handler & 0xFFF00000) != 0x08000000) || !(reset_handler & 0x1)) {
     return 0;
   }
+  return 1;
 }
 static void goto_application(void) {
   printf("Gonna Jump to Application\n");
@@ -503,7 +612,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  */
 void Error_Handler(void) {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+  /* User can add his own implementation to report the HAL error return state
+   */
   __disable_irq();
   while (1) {
   }
@@ -520,8 +630,8 @@ void Error_Handler(void) {
 void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line
-     number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
-     line) */
+     number, ex: printf("Wrong parameters value: file %s on line %d\r\n",
+     file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

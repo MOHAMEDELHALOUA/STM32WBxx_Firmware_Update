@@ -1,0 +1,649 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+#define MAX_BLOCK_SIZE (4096) // 4KB
+#define ETX_APP_START_ADDRESS 0x08010000
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+#define MAJOR 2 // BL Major version Number
+#define MINOR 0 // BL Minor version Number
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+static uint32_t delay = 250;
+UART_HandleTypeDef hlpuart1; // for debuging
+UART_HandleTypeDef
+    huart1; // for data transfer, will be connected to the host pc
+
+/* USER CODE BEGIN PV */
+const uint8_t BL_Version[2] = {MAJOR, MINOR};
+static uint32_t application_write_idx = 0; // Add this
+static uint32_t application_size = 0;      // Add this
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_LPUART1_UART_Init(void);
+/* USER CODE BEGIN PFP */
+static uint8_t is_application_valid(uint32_t app_addr);
+static void goto_application(void);
+static void Firmware_Update(void);
+static int UART_Write_Loop(void);
+static HAL_StatusTypeDef
+write_data_to_flash_app(uint8_t *data, uint16_t data_len, bool is_first_block);
+/* USER CODE END PFP */
+
+/* Private user code
+ * ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU
+   * Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the
+   * Systick.
+   */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* Configure the peripherals common clocks */
+  PeriphCommonClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART1_UART_Init();
+  MX_LPUART1_UART_Init();
+  /* USER CODE BEGIN 2 */
+  printf("\r\n=================================\r\n");
+  printf("Custom Bootloader v%d.%d\r\n", BL_Version[0], BL_Version[1]);
+  printf("=================================\r\n");
+
+  /* USER CODE END 2 */
+
+  /* Initialize leds */
+  BSP_LED_Init(LED_BLUE);
+  BSP_LED_Init(LED_GREEN);
+  BSP_LED_Init(LED_RED);
+
+  /* Initialize USER push-button, will be used to trigger an interrupt each
+   * time it's pressed.*/
+  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
+  BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_EXTI);
+  BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_EXTI);
+
+  /* USER CODE BEGIN BSP */
+  printf("Custom Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
+  // Jump to application
+  for (uint8_t i = 0; i < 10; i++) {
+    printf("%d\r\n", 9 - i);
+    BSP_LED_Off(LED_RED);
+    HAL_Delay(1500);
+    BSP_LED_On(LED_RED);
+    HAL_Delay(1500);
+    BSP_LED_Off(LED_RED);
+
+    // check for firmware update:
+    Firmware_Update();
+  }
+  if (is_application_valid(0x08010000)) {
+    BSP_LED_On(LED_GREEN);
+    HAL_Delay(1500);
+    goto_application();
+  } else {
+    printf("No valid application found, staying in bootloader\r\n");
+    // Stay in bootloader mode
+  }
+  /* USER CODE END BSP */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1) {
+
+    /* -- Sample board code for User push-button in interrupt mode ---- */
+    //    BSP_LED_Toggle(LED_BLUE);
+    //    HAL_Delay(delay);
+    //
+    //    BSP_LED_Toggle(LED_GREEN);
+    //    HAL_Delay(delay);
+    //
+    //    BSP_LED_Toggle(LED_RED);
+    //    HAL_Delay(delay);
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+   */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+   * in the RCC_OscInitTypeDef structure.
+   */
+  RCC_OscInitStruct.OscillatorType =
+      RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_10;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+    Error_Handler();
+  }
+
+  /** Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK4 | RCC_CLOCKTYPE_HCLK2 |
+                                RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
+                                RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLK2Divider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLK4Divider = RCC_SYSCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+/**
+ * @brief Peripherals Common Clock Configuration
+ * @retval None
+ */
+void PeriphCommonClock_Config(void) {
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  /** Initializes the peripherals clock
+   */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SMPS;
+  PeriphClkInitStruct.SmpsClockSelection = RCC_SMPSCLKSOURCE_HSI;
+  PeriphClkInitStruct.SmpsDivSelection = RCC_SMPSCLKDIV_RANGE0;
+
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN Smps */
+
+  /* USER CODE END Smps */
+}
+
+/**
+ * @brief LPUART1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_LPUART1_UART_Init(void) {
+
+  /* USER CODE BEGIN LPUART1_Init 0 */
+
+  /* USER CODE END LPUART1_Init 0 */
+
+  /* USER CODE BEGIN LPUART1_Init 1 */
+
+  /* USER CODE END LPUART1_Init 1 */
+  hlpuart1.Instance = LPUART1;
+  hlpuart1.Init.BaudRate = 115200;
+  hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
+  hlpuart1.Init.StopBits = UART_STOPBITS_1;
+  hlpuart1.Init.Parity = UART_PARITY_NONE;
+  hlpuart1.Init.Mode = UART_MODE_TX_RX;
+  hlpuart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  hlpuart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  hlpuart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  hlpuart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  hlpuart1.FifoMode = UART_FIFOMODE_DISABLE;
+  if (HAL_UART_Init(&hlpuart1) != HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&hlpuart1, UART_TXFIFO_THRESHOLD_1_8) !=
+      HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&hlpuart1, UART_RXFIFO_THRESHOLD_1_8) !=
+      HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&hlpuart1) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN LPUART1_Init 2 */
+
+  /* USER CODE END LPUART1_Init 2 */
+}
+
+/**
+ * @brief USART1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_USART1_UART_Init(void) {
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) !=
+      HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) !=
+      HAL_OK) {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+}
+
+/**
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void) {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+
+  /* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pins : USB_DM_Pin USB_DP_Pin */
+  GPIO_InitStruct.Pin = USB_DM_Pin | USB_DP_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF10_USB;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  /* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+#ifdef __GNUC__
+/* With GCC, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+int __io_putchar(int ch)
+#else
+int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the UART1 and Loop until the end of
+   * transmission
+   */
+  HAL_UART_Transmit(&hlpuart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
+
+static int UART_Write_Loop(void) {
+  char tx = 'g';
+  char rx = '0';
+  HAL_StatusTypeDef ex;
+  int ret = 0;
+  int count = 0;
+  while (1) {
+    // Toggle GPIO
+    BSP_LED_Toggle(LED_GREEN);
+    HAL_UART_Transmit(&huart1, (uint8_t *)&tx, 1, HAL_MAX_DELAY);
+    ex = HAL_UART_Receive(&huart1, (uint8_t *)&rx, 1, 10);
+    if ((ex == HAL_OK) && (rx == 'r')) {
+      // received data
+      printf("Firmware Update Started\r\n");
+      ret = 1;
+      break;
+    }
+    if (count == 100) {
+      // received nothing
+      printf("No Data Received for Firmware Update\r\n");
+      break;
+    }
+    count++;
+    HAL_Delay(20); // 20ms delay
+  }
+  return ret;
+}
+
+/**
+ * @brief Write data to the Application's actual flash location.
+ * @param data data to be written
+ * @param data_len data length
+ * @is_first_block true - if this is first block, false - not first block
+ * @retval HAL_StatusTypeDef
+ */
+static HAL_StatusTypeDef
+write_data_to_flash_app(uint8_t *data, uint16_t data_len, bool is_first_block) {
+  HAL_StatusTypeDef ret;
+  do {
+    ret = HAL_FLASH_Unlock();
+    if (ret != HAL_OK) {
+      break;
+    }
+
+    if (is_first_block) {
+      printf("Erasing the Flash memory...\r\n");
+      FLASH_EraseInitTypeDef EraseInitStruct;
+      uint32_t PageError;
+
+      EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+      // Calculate page number from address
+      EraseInitStruct.Page =
+          (ETX_APP_START_ADDRESS - FLASH_BASE) / FLASH_PAGE_SIZE;
+      EraseInitStruct.NbPages = 33;
+
+      ret = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+      if (ret != HAL_OK) {
+        printf("Flash Erase Error: PageError = %lu\r\n", PageError);
+        break;
+      }
+      application_write_idx = 0;
+    }
+
+    // STM32WB uses 64-bit (doubleword) programming
+    for (int i = 0; i < data_len / 8; i++) {
+      uint64_t doubleword_data = 0;
+      for (int j = 0; j < 8; j++) {
+        doubleword_data |= ((uint64_t)data[i * 8 + j] << (j * 8));
+      }
+
+      ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+                              (ETX_APP_START_ADDRESS + application_write_idx),
+                              doubleword_data);
+      if (ret == HAL_OK) {
+        application_write_idx += 8;
+      } else {
+        printf("Flash Write Error...HALT!!!\r\n");
+        break;
+      }
+    }
+
+    // Handle remaining bytes (if data_len is not multiple of 8)
+    int remaining = data_len % 8;
+    if (remaining > 0 && ret == HAL_OK) {
+      uint64_t doubleword_data = 0;
+      for (int j = 0; j < remaining; j++) {
+        doubleword_data |= ((uint64_t)data[(data_len / 8) * 8 + j] << (j * 8));
+      }
+      ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,
+                              (ETX_APP_START_ADDRESS + application_write_idx),
+                              doubleword_data);
+      if (ret == HAL_OK) {
+        application_write_idx += 8;
+      }
+    }
+
+    if (ret != HAL_OK) {
+      break;
+    }
+    ret = HAL_FLASH_Lock();
+    if (ret != HAL_OK) {
+      break;
+    }
+  } while (false);
+  return ret;
+}
+/**
+ * @brief Check for Firmware Update and update the Firmware
+ * @retval None
+ */
+static void Firmware_Update(void) {
+  uint8_t xx, yy;
+  uint8_t x = 'x';
+  uint8_t y = 'y';
+  HAL_StatusTypeDef ex = HAL_OK;
+  uint16_t current_app_size = 0;
+  uint16_t i = 0;
+  uint8_t block[MAX_BLOCK_SIZE] = {0};
+  do {
+    if (UART_Write_Loop() != 0) {
+      // Sender is ready. Receive the Firmware Size
+      //  Ask yy
+      HAL_UART_Transmit(&huart1, &y, 1, HAL_MAX_DELAY);
+      ex = HAL_UART_Receive(&huart1, &yy, 1, 5000);
+      if (ex != HAL_OK) {
+        printf("Get application Size error (yy)...HALT!!!\r\n");
+        break;
+      }
+      // Ask xx
+      HAL_UART_Transmit(&huart1, &x, 1, HAL_MAX_DELAY);
+      ex = HAL_UART_Receive(&huart1, &xx, 1, 5000);
+      if (ex != HAL_OK) {
+        printf("Get application Size error(XX)...HALT!!!\r\n");
+        break;
+      }
+      application_size = yy | (xx << 8);
+      printf("Application Size = %d bytes\r\n", application_size);
+      while (1) {
+        if ((i == MAX_BLOCK_SIZE) || (current_app_size >= application_size)) {
+          printf("Received Block[%d]\r\n", current_app_size / MAX_BLOCK_SIZE);
+          // write to flash
+          ex = write_data_to_flash_app(block, MAX_BLOCK_SIZE,
+                                       (current_app_size <= MAX_BLOCK_SIZE));
+          if (ex != HAL_OK) {
+            break;
+          }
+          // clear the memory
+          memset(block, 0, MAX_BLOCK_SIZE);
+          i = 0;
+        }
+        if (current_app_size >= application_size) {
+          // received all data. exit
+          ex = HAL_OK;
+          break;
+        }
+        // Ask yy
+        HAL_UART_Transmit(&huart1, &y, 1, HAL_MAX_DELAY);
+        ex = HAL_UART_Receive(&huart1, &yy, 1, 5000);
+        if (ex != HAL_OK) {
+          printf("Get application data[index:%d] error (yy)...HALT!!!\r\n", i);
+          break;
+        }
+        // Ask xx
+        HAL_UART_Transmit(&huart1, &x, 1, HAL_MAX_DELAY);
+        ex = HAL_UART_Receive(&huart1, &xx, 1, 5000);
+        if (ex != HAL_OK) {
+          printf("Get application data[index:%d] error(XX)...HALT!!!\r\n", i);
+          break;
+        }
+        //--- Save xxyy in block[i]
+        block[i++] = yy;
+        block[i++] = xx;
+        current_app_size += 2;
+      }
+    }
+  } while (false);
+  if (ex != HAL_OK) {
+    while (1)
+      ;
+  }
+}
+
+// check if application valide
+static uint8_t is_application_valid(uint32_t app_addr) {
+  uint32_t stack_ptr = *(volatile uint32_t *)app_addr;
+  uint32_t reset_handler = *(volatile uint32_t *)(app_addr + 4);
+
+  // Check if stack pointer is in RAM range
+  if ((stack_ptr & 0xFFE00000) != 0x20000000) {
+    return 0;
+  }
+
+  // Check if reset handler is in application flash range and is thumb code
+  if (((reset_handler & 0xFFF00000) != 0x08000000) || !(reset_handler & 0x1)) {
+    return 0;
+  }
+  return 1;
+}
+static void goto_application(void) {
+  printf("Gonna Jump to Application\n");
+  void (*app_reset_handler)(void) =
+      (void *)(*((volatile uint32_t *)(0x08010000 + 4U)));
+  //__set_MSP(*(volatile uint32_t*) 0x08010000);
+  // Turn OFF the Green Led to tell the user that Bootloader is not running
+  // Green LED OFF
+  BSP_LED_Off(LED_GREEN);
+  //  /* Reset the Clock */
+  //  HAL_RCC_DeInit();
+  //  HAL_DeInit();
+  //  //__set_MSP(*(volatile uint32_t*) 0x08010000);
+  //  SysTick->CTRL = 0;
+  //  SysTick->LOAD = 0;
+  //  SysTick->VAL = 0;
+  /* Jump to application */
+  app_reset_handler(); // call the app reset handler
+}
+
+/* USER CODE END 4 */
+
+/**
+ * @brief EXTI line detection callback.
+ * @param GPIO_Pin: Specifies the pins connected EXTI line
+ * @retval None
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  switch (GPIO_Pin) {
+  case BUTTON_SW1_PIN:
+    /* Change the period to 100 ms */
+    delay = 100;
+    break;
+  case BUTTON_SW2_PIN:
+    /* Change the period to 500 ms */
+    delay = 500;
+    break;
+  case BUTTON_SW3_PIN:
+    /* Change the period to 1000 ms */
+    delay = 1000;
+    break;
+  default:
+    break;
+  }
+}
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state
+   */
+  __disable_irq();
+  while (1) {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+#ifdef USE_FULL_ASSERT
+/**
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line) {
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line
+     number, ex: printf("Wrong parameters value: file %s on line %d\r\n",
+     file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */

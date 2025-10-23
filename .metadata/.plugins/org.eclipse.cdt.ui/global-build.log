@@ -1,0 +1,42 @@
+23:46:28 **** Incremental Build of configuration Debug for project NUCLEO_W55RG_CUSTOM_BOOTLOADER ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_NUCLEO_64 -DUSE_HAL_DRIVER -DSTM32WB55xx -c -I../Core/Inc -I../Drivers/STM32WBxx_HAL_Driver/Inc -I../Drivers/STM32WBxx_HAL_Driver/Inc/Legacy -I../Drivers/BSP/P-NUCLEO-WB55.Nucleo -I../Drivers/CMSIS/Device/ST/STM32WBxx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'Firmware_Update':
+../Core/Src/main.c:502:35: warning: format '%d' expects argument of type 'int', but argument 2 has type 'uint32_t' {aka 'long unsigned int'} [-Wformat=]
+  502 |       printf("Application Size = %d bytes\r\n", application_size);
+      |                                  ~^             ~~~~~~~~~~~~~~~~
+      |                                   |             |
+      |                                   int           uint32_t {aka long unsigned int}
+      |                                  %ld
+arm-none-eabi-gcc -o "NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf" @"objects.list"   -mcpu=cortex-m4 -T"/home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/NUCLEO_W55RG_CUSTOM_BOOTLOADER/STM32WB55RGVX_FLASH.ld" --specs=nosys.specs -Wl,-Map="NUCLEO_W55RG_CUSTOM_BOOTLOADER.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+/opt/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.linux64_1.0.0.202410170706/tools/bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/bin/ld: warning: NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf has a LOAD segment with RWX permissions
+Finished building target: NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf
+ 
+arm-none-eabi-size  NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf 
+arm-none-eabi-objdump -h -S NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf  > "NUCLEO_W55RG_CUSTOM_BOOTLOADER.list"
+arm-none-eabi-objcopy  -O ihex NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf  "NUCLEO_W55RG_CUSTOM_BOOTLOADER.hex"
+arm-none-eabi-objcopy  -O binary NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf  "NUCLEO_W55RG_CUSTOM_BOOTLOADER.bin"
+   text	   data	    bss	    dec	    hex	filename
+  23940	      0	   2236	  26176	   6640	NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf
+Finished building: default.size.stdout
+ 
+Finished building: NUCLEO_W55RG_CUSTOM_BOOTLOADER.hex
+Finished building: NUCLEO_W55RG_CUSTOM_BOOTLOADER.bin
+ 
+ 
+Finished building: NUCLEO_W55RG_CUSTOM_BOOTLOADER.list
+ 
+23:46:38 **** Incremental Build of configuration Debug for project NUCLEO_W55RG_CUSTOM_BOOTLOADER ****
+make -j8 all 
+arm-none-eabi-size  NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf 
+   text	   data	    bss	    dec	    hex	filename
+  23940	      0	   2236	  26176	   6640	NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf
+Finished building: default.size.stdout
+ 
+23:47:30 **** Incremental Build of configuration Debug for project NUCLEO_W55RG_CUSTOM_BOOTLOADER ****
+make -j8 all 
+arm-none-eabi-size  NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf 
+   text	   data	    bss	    dec	    hex	filename
+  23940	      0	   2236	  26176	   6640	NUCLEO_W55RG_CUSTOM_BOOTLOADER.elf
+Finished building: default.size.stdout
+ 

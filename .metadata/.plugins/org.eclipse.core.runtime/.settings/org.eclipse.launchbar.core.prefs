@@ -3,5 +3,7 @@ LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=linux
 configDescList=org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo_wb55_application,org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:NUCLEO_W55RG_CUSTOM_BOOTLOADER
 eclipse.preferences.version=1
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:NUCLEO_W55RG_CUSTOM_BOOTLOADER/activeLaunchMode=run
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:NUCLEO_W55RG_CUSTOM_BOOTLOADER/activeLaunchTarget=null\:---
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo_wb55_application/activeLaunchMode=run
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:nucleo_wb55_application/activeLaunchTarget=null\:---

@@ -38,12 +38,12 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define MAJOR 0   //APP Major version Number
-#define MINOR 1   //APP Minor version Number
+#define MINOR 2   //APP Minor version Number
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
-static uint32_t delay = 250;
+static uint32_t delay = 1000;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -129,8 +129,10 @@ int main(void)
     /* -- Sample board code for User push-button in interrupt mode ---- */
 	printf("Salaam from the App.\r\n");
     BSP_LED_On(LED_BLUE);
+    BSP_LED_On(LED_GREEN);
     HAL_Delay(delay);
     BSP_LED_Off(LED_BLUE);
+    BSP_LED_Off(LED_GREEN);
     HAL_Delay(delay);
     /* USER CODE END WHILE */
 

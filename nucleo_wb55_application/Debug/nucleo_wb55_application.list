@@ -7,19 +7,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         00004a78  08010140  08010140  00001140  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00000174  08014bb8  08014bb8  00005bb8  2**2
+  2 .rodata       00000180  08014bb8  08014bb8  00005bb8  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM          00000008  08014d2c  08014d2c  00005d2c  2**2
+  3 .ARM          00000008  08014d38  08014d38  00005d38  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  4 .init_array   00000004  08014d34  08014d34  00005d34  2**2
+  4 .init_array   00000004  08014d40  08014d40  00005d40  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .fini_array   00000004  08014d38  08014d38  00005d38  2**2
+  5 .fini_array   00000004  08014d44  08014d44  00005d44  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  6 .data         00000084  20000008  08014d3c  00006008  2**2
+  6 .data         00000084  20000008  08014d48  00006008  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  7 .bss          00000204  2000008c  08014dc0  0000608c  2**2
+  7 .bss          00000204  2000008c  08014dcc  0000608c  2**2
                   ALLOC
-  8 ._user_heap_stack 00000600  20000290  08014dc0  00006290  2**0
+  8 ._user_heap_stack 00000600  20000290  08014dcc  00006290  2**0
                   ALLOC
   9 .ARM.attributes 00000030  00000000  00000000  0000608c  2**0
                   CONTENTS, READONLY
@@ -540,7 +540,7 @@ int main(void)
  80105d0:	f000 fb60 	bl	8010c94 <BSP_LED_On>
   printf("Starting Application(%d.%d)\r\n", APP_Version[0], APP_Version[1] );
  80105d4:	2300      	movs	r3, #0
- 80105d6:	2202      	movs	r2, #2
+ 80105d6:	2203      	movs	r2, #3
  80105d8:	4619      	mov	r1, r3
  80105da:	480f      	ldr	r0, [pc, #60]	@ (8010618 <main+0x98>)
  80105dc:	f003 fc16 	bl	8013e0c <iprintf>
@@ -549,15 +549,15 @@ int main(void)
   {
 
     /* -- Sample board code for User push-button in interrupt mode ---- */
-	printf("Salaam from the App.\r\n");
+	printf("Salaam from the App. Labas Alik ?\r\n");
  80105e0:	480e      	ldr	r0, [pc, #56]	@ (801061c <main+0x9c>)
  80105e2:	f003 fc7b 	bl	8013edc <puts>
     BSP_LED_On(LED_BLUE);
  80105e6:	2000      	movs	r0, #0
  80105e8:	f000 fb54 	bl	8010c94 <BSP_LED_On>
-    BSP_LED_On(LED_GREEN);
+    BSP_LED_Off(LED_GREEN);
  80105ec:	2001      	movs	r0, #1
- 80105ee:	f000 fb51 	bl	8010c94 <BSP_LED_On>
+ 80105ee:	f000 fb6b 	bl	8010cc8 <BSP_LED_Off>
     HAL_Delay(delay);
  80105f2:	4b0b      	ldr	r3, [pc, #44]	@ (8010620 <main+0xa0>)
  80105f4:	681b      	ldr	r3, [r3, #0]
@@ -566,15 +566,15 @@ int main(void)
     BSP_LED_Off(LED_BLUE);
  80105fc:	2000      	movs	r0, #0
  80105fe:	f000 fb63 	bl	8010cc8 <BSP_LED_Off>
-    BSP_LED_Off(LED_GREEN);
+    BSP_LED_On(LED_GREEN);
  8010602:	2001      	movs	r0, #1
- 8010604:	f000 fb60 	bl	8010cc8 <BSP_LED_Off>
+ 8010604:	f000 fb46 	bl	8010c94 <BSP_LED_On>
     HAL_Delay(delay);
  8010608:	4b05      	ldr	r3, [pc, #20]	@ (8010620 <main+0xa0>)
  801060a:	681b      	ldr	r3, [r3, #0]
  801060c:	4618      	mov	r0, r3
  801060e:	f000 fc6b 	bl	8010ee8 <HAL_Delay>
-	printf("Salaam from the App.\r\n");
+	printf("Salaam from the App. Labas Alik ?\r\n");
  8010612:	bf00      	nop
  8010614:	e7e4      	b.n	80105e0 <main+0x60>
  8010616:	bf00      	nop
@@ -1780,11 +1780,11 @@ LoopForever:
   INIT_DATA _sdata, _edata, _sidata
  8010bcc:	20000008 	.word	0x20000008
  8010bd0:	2000008c 	.word	0x2000008c
- 8010bd4:	08014d3c 	.word	0x08014d3c
+ 8010bd4:	08014d48 	.word	0x08014d48
   INIT_DATA _sMB_MEM2, _eMB_MEM2, _siMB_MEM2
  8010bd8:	20030000 	.word	0x20030000
  8010bdc:	20030000 	.word	0x20030000
- 8010be0:	08014dc0 	.word	0x08014dc0
+ 8010be0:	08014dcc 	.word	0x08014dcc
   INIT_BSS _sbss, _ebss
  8010be4:	2000008c 	.word	0x2000008c
  8010be8:	20000290 	.word	0x20000290
@@ -1893,7 +1893,7 @@ void BSP_LED_Init(Led_TypeDef Led)
  8010c86:	46bd      	mov	sp, r7
  8010c88:	bd80      	pop	{r7, pc}
  8010c8a:	bf00      	nop
- 8010c8c:	08014cbc 	.word	0x08014cbc
+ 8010c8c:	08014cc8 	.word	0x08014cc8
  8010c90:	20000010 	.word	0x20000010
 
 08010c94 <BSP_LED_On>:
@@ -1925,7 +1925,7 @@ void BSP_LED_On(Led_TypeDef Led)
  8010cbc:	bd80      	pop	{r7, pc}
  8010cbe:	bf00      	nop
  8010cc0:	20000010 	.word	0x20000010
- 8010cc4:	08014cbc 	.word	0x08014cbc
+ 8010cc4:	08014cc8 	.word	0x08014cc8
 
 08010cc8 <BSP_LED_Off>:
   *     @arg LED2
@@ -1956,7 +1956,7 @@ void BSP_LED_Off(Led_TypeDef Led)
  8010cf0:	bd80      	pop	{r7, pc}
  8010cf2:	bf00      	nop
  8010cf4:	20000010 	.word	0x20000010
- 8010cf8:	08014cbc 	.word	0x08014cbc
+ 8010cf8:	08014cc8 	.word	0x08014cc8
 
 08010cfc <BSP_PB_Init>:
   *     @arg BUTTON_MODE_EXTI: Button will be connected to EXTI line with interrupt
@@ -2086,9 +2086,9 @@ void BSP_PB_Init(Button_TypeDef Button, ButtonMode_TypeDef ButtonMode)
  8010dca:	3720      	adds	r7, #32
  8010dcc:	46bd      	mov	sp, r7
  8010dce:	bd80      	pop	{r7, pc}
- 8010dd0:	08014cc4 	.word	0x08014cc4
+ 8010dd0:	08014cd0 	.word	0x08014cd0
  8010dd4:	2000001c 	.word	0x2000001c
- 8010dd8:	08014ccc 	.word	0x08014ccc
+ 8010dd8:	08014cd8 	.word	0x08014cd8
 
 08010ddc <HAL_Init>:
   *         need to ensure that the SysTick time base is always set to 1 millisecond
@@ -6451,7 +6451,7 @@ uint32_t HAL_RCC_GetSysClockFreq(void)
  80125b6:	46bd      	mov	sp, r7
  80125b8:	bd90      	pop	{r4, r7, pc}
  80125ba:	bf00      	nop
- 80125bc:	08014c7c 	.word	0x08014c7c
+ 80125bc:	08014c88 	.word	0x08014c88
  80125c0:	00f42400 	.word	0x00f42400
  80125c4:	01e84800 	.word	0x01e84800
 
@@ -6478,7 +6478,7 @@ uint32_t HAL_RCC_GetHCLKFreq(void)
 }
  80125e8:	4618      	mov	r0, r3
  80125ea:	bd98      	pop	{r3, r4, r7, pc}
- 80125ec:	08014c1c 	.word	0x08014c1c
+ 80125ec:	08014c28 	.word	0x08014c28
 
 080125f0 <HAL_RCC_GetPCLK1Freq>:
   * @note   Each time PCLK1 changes, this function must be called to update the
@@ -6504,7 +6504,7 @@ uint32_t HAL_RCC_GetPCLK1Freq(void)
 }
  8012614:	4618      	mov	r0, r3
  8012616:	bd98      	pop	{r3, r4, r7, pc}
- 8012618:	08014c5c 	.word	0x08014c5c
+ 8012618:	08014c68 	.word	0x08014c68
 
 0801261c <HAL_RCC_GetPCLK2Freq>:
   * @note   Each time PCLK2 changes, this function must be called to update the
@@ -6530,7 +6530,7 @@ uint32_t HAL_RCC_GetPCLK2Freq(void)
 }
  8012640:	4618      	mov	r0, r3
  8012642:	bd98      	pop	{r3, r4, r7, pc}
- 8012644:	08014c5c 	.word	0x08014c5c
+ 8012644:	08014c68 	.word	0x08014c68
 
 08012648 <RCC_SetFlashLatencyFromMSIRange>:
             voltage range.
@@ -6602,8 +6602,8 @@ static HAL_StatusTypeDef RCC_SetFlashLatencyFromMSIRange(uint32_t MSI_Range)
  80126a6:	46bd      	mov	sp, r7
  80126a8:	bd90      	pop	{r4, r7, pc}
  80126aa:	bf00      	nop
- 80126ac:	08014c7c 	.word	0x08014c7c
- 80126b0:	08014c1c 	.word	0x08014c1c
+ 80126ac:	08014c88 	.word	0x08014c88
+ 80126b0:	08014c28 	.word	0x08014c28
  80126b4:	431bde83 	.word	0x431bde83
 
 080126b8 <RCC_SetFlashLatency>:
@@ -6769,9 +6769,9 @@ static HAL_StatusTypeDef RCC_SetFlashLatency(uint32_t Flash_ClkSrcFreq, uint32_t
  801279a:	46bd      	mov	sp, r7
  801279c:	bd90      	pop	{r4, r7, pc}
  801279e:	bf00      	nop
- 80127a0:	08014bf0 	.word	0x08014bf0
- 80127a4:	08014c00 	.word	0x08014c00
- 80127a8:	08014c0c 	.word	0x08014c0c
+ 80127a0:	08014bfc 	.word	0x08014bfc
+ 80127a4:	08014c0c 	.word	0x08014c0c
+ 80127a8:	08014c18 	.word	0x08014c18
  80127ac:	58004000 	.word	0x58004000
 
 080127b0 <LL_RCC_LSE_IsEnabled>:
@@ -8982,7 +8982,7 @@ HAL_StatusTypeDef UART_SetConfig(UART_HandleTypeDef *huart)
  80134e4:	40008000 	.word	0x40008000
  80134e8:	40013800 	.word	0x40013800
  80134ec:	00f42400 	.word	0x00f42400
- 80134f0:	08014cd0 	.word	0x08014cd0
+ 80134f0:	08014cdc 	.word	0x08014cdc
       default:
         pclk = 0U;
  80134f4:	2300      	movs	r3, #0
@@ -9184,7 +9184,7 @@ HAL_StatusTypeDef UART_SetConfig(UART_HandleTypeDef *huart)
  8013634:	46bd      	mov	sp, r7
  8013636:	e8bd 8fb0 	ldmia.w	sp!, {r4, r5, r7, r8, r9, sl, fp, pc}
  801363a:	bf00      	nop
- 801363c:	08014cd0 	.word	0x08014cd0
+ 801363c:	08014cdc 	.word	0x08014cdc
  8013640:	00f42400 	.word	0x00f42400
 
 08013644 <UART_AdvFeatureConfig>:
@@ -10287,8 +10287,8 @@ static void UARTEx_SetNbDataToProcess(UART_HandleTypeDef *huart)
  8013c78:	f85d 7b04 	ldr.w	r7, [sp], #4
  8013c7c:	4770      	bx	lr
  8013c7e:	bf00      	nop
- 8013c80:	08014ce8 	.word	0x08014ce8
- 8013c84:	08014cf0 	.word	0x08014cf0
+ 8013c80:	08014cf4 	.word	0x08014cf4
+ 8013c84:	08014cfc 	.word	0x08014cfc
 
 08013c88 <std>:
  8013c88:	2300      	movs	r3, #0
@@ -10861,10 +10861,10 @@ static void UARTEx_SetNbDataToProcess(UART_HandleTypeDef *huart)
  8014176:	4798      	blx	r3
  8014178:	3601      	adds	r6, #1
  801417a:	e7f2      	b.n	8014162 <__libc_init_array+0x1e>
- 801417c:	08014d34 	.word	0x08014d34
- 8014180:	08014d34 	.word	0x08014d34
- 8014184:	08014d34 	.word	0x08014d34
- 8014188:	08014d38 	.word	0x08014d38
+ 801417c:	08014d40 	.word	0x08014d40
+ 8014180:	08014d40 	.word	0x08014d40
+ 8014184:	08014d40 	.word	0x08014d40
+ 8014188:	08014d44 	.word	0x08014d44
 
 0801418c <__retarget_lock_init_recursive>:
  801418c:	4770      	bx	lr
@@ -11363,11 +11363,11 @@ static void UARTEx_SetNbDataToProcess(UART_HandleTypeDef *huart)
  80145ec:	4630      	mov	r0, r6
  80145ee:	f000 f879 	bl	80146e4 <_printf_i>
  80145f2:	e7e4      	b.n	80145be <_vfiprintf_r+0x1e6>
- 80145f4:	08014cf8 	.word	0x08014cf8
- 80145f8:	08014d02 	.word	0x08014d02
+ 80145f4:	08014d04 	.word	0x08014d04
+ 80145f8:	08014d0e 	.word	0x08014d0e
  80145fc:	00000000 	.word	0x00000000
  8014600:	080143b3 	.word	0x080143b3
- 8014604:	08014cfe 	.word	0x08014cfe
+ 8014604:	08014d0a 	.word	0x08014d0a
 
 08014608 <_printf_common>:
  8014608:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -11696,8 +11696,8 @@ static void UARTEx_SetNbDataToProcess(UART_HandleTypeDef *huart)
  8014910:	2500      	movs	r5, #0
  8014912:	f104 0619 	add.w	r6, r4, #25
  8014916:	e7f5      	b.n	8014904 <_printf_i+0x220>
- 8014918:	08014d09 	.word	0x08014d09
- 801491c:	08014d1a 	.word	0x08014d1a
+ 8014918:	08014d15 	.word	0x08014d15
+ 801491c:	08014d26 	.word	0x08014d26
 
 08014920 <__sflush_r>:
  8014920:	f9b1 200c 	ldrsh.w	r2, [r1, #12]

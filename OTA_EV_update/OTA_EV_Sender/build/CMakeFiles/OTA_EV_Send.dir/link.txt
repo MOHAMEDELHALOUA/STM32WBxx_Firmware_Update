@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/OTA_EV_Send.dir/OTA_EV_Sender2.cpp.o -o OTA_EV_Send  -lpaho-mqttpp3 -lpaho-mqtt3as

@@ -4,7 +4,7 @@
 #include <string>
 #include "mqtt/async_client.h"
 
-const std::string SERVER_ADDRESS = "tcp://16.170.237.131:1883";
+const std::string SERVER_ADDRESS = "tcp://localhost:1883";
 const std::string CLIENT_ID = "OTA_Sender";
 const std::string TOPIC = "ota/firmware";
 

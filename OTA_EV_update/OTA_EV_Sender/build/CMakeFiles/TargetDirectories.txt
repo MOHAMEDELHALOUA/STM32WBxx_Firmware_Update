@@ -1,0 +1,3 @@
+/home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/OTA_EV_update/OTA_EV_Sender/build/CMakeFiles/OTA_EV_Send.dir
+/home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/OTA_EV_update/OTA_EV_Sender/build/CMakeFiles/edit_cache.dir
+/home/elhaloua/STM32CubeIDE/workspace_1.19.0/09_2025_CUSTOM_BL/OTA_EV_update/OTA_EV_Sender/build/CMakeFiles/rebuild_cache.dir

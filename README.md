@@ -11,6 +11,10 @@ this project aim to create a cutom Bootloader (BL) and application on the stm32w
 ### Program execution after firmware update of the Application via the host pc and the custom bootloader on stm32wb55rg
 ![After Firmware update](https://github.com/MOHAMEDELHALOUA/STM32WBxx_Firmware_Update/blob/main/Resulats/App_v2_0_running_after_update.png)
 
+### General workflow with OTA support
+
+<img width="2104" height="1008" alt="OTA_update_EV" src="https://github.com/user-attachments/assets/f76d3bb1-4f63-45be-979d-ec7460a986b7" />
+
 ### Resources
 *[NUCLEO-WB55RG](https://os.mbed.com/platforms/ST-Nucleo-WB55RG/)
 *[User manual stm32wb55xx](https://cdn.sparkfun.com/assets/1/6/c/b/b/STM32WB55xx_Reference_Manual.pdf)

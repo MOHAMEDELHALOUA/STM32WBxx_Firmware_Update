@@ -1,4 +1,3 @@
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/a024e177-b015-432d-ae5c-22ba78f09c08" /># STM32WBxx_Firmware_Update
 this project aim to create a cutom Bootloader (BL) and application on the stm32wb55RG MCU, and use the XMODEM or other protocol to update the application via the cutom bootloader, and maybe updating also the BL.
 
 ![STM32WB55RG-Overview](https://community.st.com/t5/image/serverpage/image-id/91413iD068101268E74C92/image-size/large/is-moderation-mode/true?v=v2&px=999)
@@ -8,7 +7,6 @@ this project aim to create a cutom Bootloader (BL) and application on the stm32w
 
 ### Transfer the update (binary file) to the stm32 via uart, and recieve it by the custom bootloader
 <img width="1366" height="272" alt="Screenshot From 2025-11-07 15-12-12" src="https://github.com/user-attachments/assets/241bec91-a0fb-4ba6-be10-755b199f4f0a" />
-
 
 ### Program execution after firmware update of the Application via the host pc and the custom bootloader on stm32wb55rg
 ![After Firmware update](https://github.com/MOHAMEDELHALOUA/STM32WBxx_Firmware_Update/blob/main/Resulats/App_v2_0_running_after_update.png)

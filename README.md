@@ -13,7 +13,7 @@ this project aim to create a cutom Bootloader (BL) and application on the stm32w
 
 ### General workflow with OTA support
 
-<img width="2104" height="1008" alt="OTA_update_EV" src="https://github.com/user-attachments/assets/f76d3bb1-4f63-45be-979d-ec7460a986b7" />
+<img width="2104" height="1008" alt="UART_update_workflow2" src="https://github.com/user-attachments/assets/7e935f92-a14c-44e6-9741-a9870802150a" />
 
 ### Resources
 *[NUCLEO-WB55RG](https://os.mbed.com/platforms/ST-Nucleo-WB55RG/)

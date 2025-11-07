@@ -1,4 +1,4 @@
-this project aim to create a cutom Bootloader (BL) and application on the stm32wb55RG MCU, and use the XMODEM or other protocol to update the application via the cutom bootloader, and maybe updating also the BL.
+this project aim to create a cutom Bootloader (BL) and application on the stm32wb55RG MCU, and use the XMODEM or other protocol to update the application via the cutom bootloader, via UART without passing by ST-Link.
 
 ![STM32WB55RG-Overview](https://community.st.com/t5/image/serverpage/image-id/91413iD068101268E74C92/image-size/large/is-moderation-mode/true?v=v2&px=999)
 

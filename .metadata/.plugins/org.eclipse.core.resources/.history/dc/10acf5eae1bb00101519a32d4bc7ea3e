@@ -359,7 +359,7 @@ int fputc(int ch, FILE *f)
   /* e.g. write a character to the UART1 and Loop until the end of
    * transmission
    */
-  HAL_UART_Transmit(&hlpuart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
   return ch;
 }
 

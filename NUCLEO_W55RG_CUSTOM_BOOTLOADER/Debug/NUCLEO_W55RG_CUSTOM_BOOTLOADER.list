@@ -501,7 +501,7 @@ int main(void) {
   MX_LPUART1_UART_Init();
  800059a:	f000 f8d3 	bl	8000744 <MX_LPUART1_UART_Init>
   /* USER CODE BEGIN 2 */
-  printf("Custom Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
+  printf("Starting custom Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
  800059e:	2302      	movs	r3, #2
  80005a0:	2200      	movs	r2, #0
  80005a2:	4619      	mov	r1, r3

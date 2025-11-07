@@ -114,7 +114,7 @@ int main(void) {
   MX_USART1_UART_Init();
   MX_LPUART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  printf("Starting custom Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
+  printf("Custom Starting Bootloader(%d.%d)\r\n", BL_Version[0], BL_Version[1]);
 
   /* USER CODE END 2 */
 

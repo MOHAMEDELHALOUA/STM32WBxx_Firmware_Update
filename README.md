@@ -18,6 +18,10 @@ this project aim to create a cutom Bootloader (BL) and application on the stm32w
 
 <img width="2104" height="1008" alt="UART_update_workflow2" src="https://github.com/user-attachments/assets/7e935f92-a14c-44e6-9741-a9870802150a" />
 
+### Setup
+
+![img3](https://github.com/user-attachments/assets/0c878237-b360-4391-b144-414d84a0b207)
+
 ### Resources
 *[NUCLEO-WB55RG](https://os.mbed.com/platforms/ST-Nucleo-WB55RG/)
 *[User manual stm32wb55xx](https://cdn.sparkfun.com/assets/1/6/c/b/b/STM32WB55xx_Reference_Manual.pdf)

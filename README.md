@@ -2,6 +2,9 @@ this project aim to create a cutom Bootloader (BL) and application on the stm32w
 
 ![STM32WB55RG-Overview](https://community.st.com/t5/image/serverpage/image-id/91413iD068101268E74C92/image-size/large/is-moderation-mode/true?v=v2&px=999)
 
+### Memory mapping
+<img width="800" height="900" alt="Memory_mapping" src="https://github.com/user-attachments/assets/c609c9f7-57f0-45f8-96c5-c49039137812" />
+
 ### Program execution with custom bootloader and application before firmware update implementation
 ![Update Progress](https://github.com/MOHAMEDELHALOUA/STM32WBxx_Firmware_Update/blob/main/Resulats/App_BL_no_firmware_update.png)
 
